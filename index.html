@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Astro Avatar</title>
+    <link rel="stylesheet" href="reset.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="page--home">
+      <div class="interface__top">
+        <div class="interface__description">
+          Enter your birth date to generate your astro avatar.
+        </div>
+
+        <div class="interface__date-select">
+          <!-- DAY SELECT -->
+          <select id="daySelect" onchange="refreshAvatar()">
+            <option value="">DAY</option>
+            <!-- Options dynamically populated in main.js -->
+          </select>
+
+          <!-- MONTH SELECT -->
+          <select id="monthSelect" onchange="refreshAvatar()">
+            <option value="">MONTH</option>
+            <!-- Options dynamically populated in main.js -->
+          </select>
+
+          <!-- DECADE SELECT -->
+          <select id="decadeSelect" onchange="refreshAvatar()">
+            <option value="">DECADE</option>
+            <!-- Options dynamically populated in main.js -->
+          </select>
+        </div>
+      </div>
+
+      <div class="interface__middle">
+        <svg
+          id="finalAvatar"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 500 500"
+        ></svg>
+      </div>
+
+      <div class="interface__bottom">
+        <div class="interface__about">
+          <a class="interface__about-link" href="/about">About</a>
+        </div>
+
+        <div class="interface__download-reset">
+          <!-- Initially hidden, shown only when all 3 fields are valid -->
+          <button
+            id="downloadButton"
+            style="display: none"
+            onclick="downloadSvg()"
+          >
+            DOWNLOAD
+          </button>
+
+          <!-- RESET button -->
+          <button onclick="resetAvatar()">RESET</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- dom-to-image for optional PNG download -->
+    <script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/src/dom-to-image.min.js"></script>
+
+    <!-- Main logic -->
+    <script src="main.js"></script>
+  </body>
+</html>
