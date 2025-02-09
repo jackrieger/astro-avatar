@@ -2,30 +2,27 @@
  * 1) Populate <select> elements
  *******************************************************/
 function populateSelectBoxes() {
-  // DAY 1..31
   const daySelect = document.getElementById("daySelect");
   for (let d = 1; d <= 31; d++) {
     const opt = document.createElement("option");
     opt.value = d;
-    opt.textContent = d; // numeric
+    opt.textContent = d;
     daySelect.appendChild(opt);
   }
 
-  // MONTH 1..12
   const monthSelect = document.getElementById("monthSelect");
   for (let m = 1; m <= 12; m++) {
     const opt = document.createElement("option");
     opt.value = m;
-    opt.textContent = m; // numeric
+    opt.textContent = m;
     monthSelect.appendChild(opt);
   }
 
-  // DECADE 1900..2020 (step 10)
   const decadeSelect = document.getElementById("decadeSelect");
   for (let decade = 1900; decade <= 2020; decade += 10) {
     const opt = document.createElement("option");
     opt.value = decade;
-    opt.textContent = decade; // numeric
+    opt.textContent = decade;
     decadeSelect.appendChild(opt);
   }
 }
@@ -33,73 +30,59 @@ function populateSelectBoxes() {
 document.addEventListener("DOMContentLoaded", populateSelectBoxes);
 
 /*******************************************************
- * 2) Global variables to store JSON data
+ * 2) Define paths for body parts
  *******************************************************/
-let dayToEyeSvg = {};
-let monthToNoseSvg = {};
-let decadeToMouthSvg = {};
+let dayToEyePath = {};
+let monthToNosePath = {};
+let decadeToMouthPath = {};
+
+function initializePaths() {
+  for (let d = 1; d <= 31; d++) {
+    dayToEyePath[d] = `svgs/eyes/${d}.svg`;
+  }
+
+  for (let m = 1; m <= 12; m++) {
+    monthToNosePath[m] = `svgs/nose/${m}.svg`;
+  }
+
+  for (let decade = 1900; decade <= 2020; decade += 10) {
+    decadeToMouthPath[decade] = `svgs/mouth/${decade}.svg`;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", initializePaths);
 
 /*******************************************************
- * 3) Fetch JSON files on page load
- *******************************************************/
-Promise.all([
-  fetch("eyes.json").then((r) => r.json()),
-  fetch("nose.json").then((r) => r.json()),
-  fetch("mouth.json").then((r) => r.json()),
-])
-  .then(([eyesData, noseData, mouthData]) => {
-    dayToEyeSvg = eyesData;
-    monthToNoseSvg = noseData;
-    decadeToMouthSvg = mouthData;
-    console.log("JSON files loaded.");
-  })
-  .catch((err) => {
-    console.error("Error loading JSON files:", err);
-  });
-
-/*******************************************************
- * 4) Build the final avatar SVG snippet
+ * 3) Build avatar with <image> elements
  *******************************************************/
 function createAvatarSvg(day, month, decade) {
-  let eyeSvg = "";
-  let noseSvg = "";
-  let mouthSvg = "";
+  let eyeImage = "";
+  let noseImage = "";
+  let mouthImage = "";
 
-  if (day && dayToEyeSvg[day]) {
-    eyeSvg = `
-      <g transform="translate(130, 80) scale(0.5)">
-        ${dayToEyeSvg[day]}
-      </g>
-    `;
+  if (day && dayToEyePath[day]) {
+    eyeImage = `<image href="${dayToEyePath[day]}" x="130" y="80" width="100" height="100"/>`;
   }
 
-  if (month && monthToNoseSvg[month]) {
-    noseSvg = `
-      <g transform="translate(215, 160) scale(0.4)">
-        ${monthToNoseSvg[month]}
-      </g>
-    `;
+  if (month && monthToNosePath[month]) {
+    noseImage = `<image href="${monthToNosePath[month]}" x="215" y="160" width="70" height="120"/>`;
   }
 
-  if (decade) {
-    if (decadeToMouthSvg[decade]) {
-      mouthSvg = `
-        <g transform="translate(50, 280) scale(0.5)">
-          ${decadeToMouthSvg[decade]}
-        </g>
-      `;
-    }
+  if (decade && decadeToMouthPath[decade]) {
+    mouthImage = `<image href="${decadeToMouthPath[decade]}" x="50" y="280" width="150" height="80"/>`;
   }
 
   return `
-    ${eyeSvg}
-    ${noseSvg}
-    ${mouthSvg}
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+      ${eyeImage}
+      ${noseImage}
+      ${mouthImage}
+    </svg>
   `;
 }
 
 /*******************************************************
- * 5) Refresh avatar + show/hide Download button
+ * 4) Refresh avatar when selections change
  *******************************************************/
 function refreshAvatar() {
   const day = parseInt(document.getElementById("daySelect").value, 10);
@@ -109,31 +92,23 @@ function refreshAvatar() {
   const combined = createAvatarSvg(day, month, decade);
   document.getElementById("finalAvatar").innerHTML = combined;
 
-  // Show "Download" only if all 3 are selected
   const downloadBtn = document.getElementById("downloadButton");
-  if (day && month && decade) {
-    downloadBtn.style.display = "inline-block";
-  } else {
-    downloadBtn.style.display = "none";
-  }
+  downloadBtn.style.display = day && month && decade ? "inline-block" : "none";
 }
 
 /*******************************************************
- * 6) Reset the avatar
+ * 5) Reset avatar
  *******************************************************/
 function resetAvatar() {
   document.getElementById("daySelect").value = "";
   document.getElementById("monthSelect").value = "";
   document.getElementById("decadeSelect").value = "";
-
   document.getElementById("finalAvatar").innerHTML = "";
-
-  // Also hide the Download button again
   document.getElementById("downloadButton").style.display = "none";
 }
 
 /*******************************************************
- * 7) Download as SVG
+ * 6) Download avatar as SVG
  *******************************************************/
 function downloadSvg() {
   const svgEl = document.getElementById("finalAvatar");
@@ -145,13 +120,13 @@ function downloadSvg() {
 
   const link = document.createElement("a");
   link.href = url;
-  link.download = "birthday_avatar.svg";
+  link.download = "astro_avatar.svg";
   link.click();
   URL.revokeObjectURL(url);
 }
 
 /*******************************************************
- * (Optional) Download as PNG via dom-to-image
+ * 7) Download avatar as PNG
  *******************************************************/
 function downloadPng() {
   const svgNode = document.getElementById("finalAvatar");
@@ -160,7 +135,7 @@ function downloadPng() {
     .then((dataUrl) => {
       const link = document.createElement("a");
       link.href = dataUrl;
-      link.download = "birthday_avatar.png";
+      link.download = "astro_avatar.png";
       link.click();
     })
     .catch((err) => {
