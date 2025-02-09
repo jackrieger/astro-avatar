@@ -47,6 +47,7 @@ body {
 .interface__bottom {
   display: flex;
   justify-content: space-between;
+  gap: 10px;
   padding: 1rem;
 }
 
@@ -57,7 +58,9 @@ body {
 
 /* Styles for the final SVG container */
 #finalAvatar {
-  border: 1px solid #999;
+  background-color: #fff;
+  border: 1px solid #000;
+  border-radius: 50%;
   display: block;
   margin: 20px auto; /* centers the SVG */
   width: 300px; /* responsive width */
@@ -65,8 +68,8 @@ body {
 }
 
 /*********************************************************
-       * MATCHING STYLES FOR <select> AND BUTTONS
-       *********************************************************/
+ * MATCHING STYLES FOR <select> AND BUTTONS
+ *********************************************************/
 select,
 button {
   appearance: none;
@@ -75,26 +78,26 @@ button {
   border: none;
   border-radius: 9px;
   box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.25);
-  padding: 6px 12px; /* more horizontal padding so text doesn't clash with arrow */
+  padding: 6px 12px;
   cursor: pointer;
-  font: inherit; /* match page font */
+  font: inherit;
 }
 
-/* White background by default (for selects, reset button) */
-select,
-button:not(#downloadButton) {
+select {
   background-color: #fff;
 }
 
-/* Download button: black background, white text */
-#downloadButton {
+/* Default button style */
+button {
+  background-color: #fff;
+}
+
+/* Specific download button styles */
+#downloadSvgButton,
+#downloadPngButton {
   background-color: #000;
   color: #fff;
 }
-
-/* If you want uppercase text on all buttons, uncomment:
-         button { text-transform: uppercase; }
-      */
 
 /* Add a black down-chevron to the <select> placeholders (DAY, MONTH, DECADE) */
 select {

@@ -1,5 +1,5 @@
 /*******************************************************
- * 1) Populate <select> elements
+ * Populate <select> elements
  *******************************************************/
 function populateSelectBoxes() {
   const daySelect = document.getElementById("daySelect");
@@ -30,7 +30,7 @@ function populateSelectBoxes() {
 document.addEventListener("DOMContentLoaded", populateSelectBoxes);
 
 /*******************************************************
- * 2) Define paths for body parts
+ * Define paths for body parts
  *******************************************************/
 let dayToEyePath = {};
 let monthToNosePath = {};
@@ -53,36 +53,39 @@ function initializePaths() {
 document.addEventListener("DOMContentLoaded", initializePaths);
 
 /*******************************************************
- * 3) Build avatar with <image> elements
+ * Build avatar with direct SVG injection
  *******************************************************/
 function createAvatarSvg(day, month, decade) {
-  let eyeImage = "";
-  let noseImage = "";
-  let mouthImage = "";
+  let leftEye = "";
+  let rightEye = "";
+  let nose = "";
+  let mouth = "";
 
   if (day && dayToEyePath[day]) {
-    eyeImage = `<image href="${dayToEyePath[day]}" x="130" y="80" width="100" height="100"/>`;
+    leftEye = `<image href="${dayToEyePath[day]}" x="41" y="44" width="42" height="42"/>`;
+    rightEye = `<image href="${dayToEyePath[day]}" x="118" y="44" width="42" height="42"/>`;
   }
 
   if (month && monthToNosePath[month]) {
-    noseImage = `<image href="${monthToNosePath[month]}" x="215" y="160" width="70" height="120"/>`;
+    nose = `<image href="${monthToNosePath[month]}" x="99" y="93" width="12.625" height="37.625"/>`;
   }
 
   if (decade && decadeToMouthPath[decade]) {
-    mouthImage = `<image href="${decadeToMouthPath[decade]}" x="50" y="280" width="150" height="80"/>`;
+    mouth = `<image href="${decadeToMouthPath[decade]}" x="62" y="144" width="75.5" height="38"/>`;
   }
 
   return `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
-      ${eyeImage}
-      ${noseImage}
-      ${mouthImage}
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+      ${leftEye}
+      ${rightEye}
+      ${nose}
+      ${mouth}
     </svg>
   `;
 }
 
 /*******************************************************
- * 4) Refresh avatar when selections change
+ * Refresh avatar when selections change
  *******************************************************/
 function refreshAvatar() {
   const day = parseInt(document.getElementById("daySelect").value, 10);
@@ -92,23 +95,29 @@ function refreshAvatar() {
   const combined = createAvatarSvg(day, month, decade);
   document.getElementById("finalAvatar").innerHTML = combined;
 
-  const downloadBtn = document.getElementById("downloadButton");
-  downloadBtn.style.display = day && month && decade ? "inline-block" : "none";
+  const showDownload = day && month && decade;
+  document.getElementById("downloadSvgButton").style.display = showDownload
+    ? "inline-block"
+    : "none";
+  document.getElementById("downloadPngButton").style.display = showDownload
+    ? "inline-block"
+    : "none";
 }
 
 /*******************************************************
- * 5) Reset avatar
+ * Reset avatar
  *******************************************************/
 function resetAvatar() {
   document.getElementById("daySelect").value = "";
   document.getElementById("monthSelect").value = "";
   document.getElementById("decadeSelect").value = "";
   document.getElementById("finalAvatar").innerHTML = "";
-  document.getElementById("downloadButton").style.display = "none";
+  document.getElementById("downloadSvgButton").style.display = "none";
+  document.getElementById("downloadPngButton").style.display = "none";
 }
 
 /*******************************************************
- * 6) Download avatar as SVG
+ * Download avatar as SVG
  *******************************************************/
 function downloadSvg() {
   const svgEl = document.getElementById("finalAvatar");
@@ -126,19 +135,31 @@ function downloadSvg() {
 }
 
 /*******************************************************
- * 7) Download avatar as PNG
+ * Download avatar as PNG
  *******************************************************/
 function downloadPng() {
-  const svgNode = document.getElementById("finalAvatar");
-  domtoimage
-    .toPng(svgNode, { width: 500, height: 500 })
-    .then((dataUrl) => {
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = "astro_avatar.png";
-      link.click();
-    })
-    .catch((err) => {
-      console.error("PNG generation failed!", err);
-    });
+  const svgEl = document.getElementById("finalAvatar");
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 200;
+  canvas.height = 200;
+  const ctx = canvas.getContext("2d");
+
+  const svgData = new XMLSerializer().serializeToString(svgEl);
+  const img = new Image();
+  const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
+
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(url);
+
+    const pngUrl = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = pngUrl;
+    link.download = "astro_avatar.png";
+    link.click();
+  };
+
+  img.src = url;
 }
