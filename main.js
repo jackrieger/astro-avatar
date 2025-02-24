@@ -74,14 +74,9 @@ function createAvatarSvg(day, month, decade) {
     mouth = `<image href="${decadeToMouthPath[decade]}" x="62" y="144" width="75.5" height="38"/>`;
   }
 
-  return `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-      ${leftEye}
-      ${rightEye}
-      ${nose}
-      ${mouth}
-    </svg>
-  `;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+      ${leftEye} ${rightEye} ${nose} ${mouth}
+    </svg>`;
 }
 
 /*******************************************************
@@ -99,9 +94,9 @@ function refreshAvatar() {
   document.getElementById("downloadSvgButton").style.display = showDownload
     ? "inline-block"
     : "none";
-  document.getElementById("downloadPngButton").style.display = showDownload
-    ? "inline-block"
-    : "none";
+
+  // PNG button hidden since PNG is disabled for now
+  // document.getElementById("downloadPngButton").style.display = showDownload ? "inline-block" : "none";
 }
 
 /*******************************************************
@@ -113,53 +108,111 @@ function resetAvatar() {
   document.getElementById("decadeSelect").value = "";
   document.getElementById("finalAvatar").innerHTML = "";
   document.getElementById("downloadSvgButton").style.display = "none";
-  document.getElementById("downloadPngButton").style.display = "none";
+
+  // document.getElementById("downloadPngButton").style.display = "none";
 }
 
 /*******************************************************
- * Download avatar as SVG
+ * Download avatar as SVG (Fix for external images)
  *******************************************************/
 function downloadSvg() {
   const svgEl = document.getElementById("finalAvatar");
-  const serializer = new XMLSerializer();
-  const svgString = serializer.serializeToString(svgEl);
 
-  const blob = new Blob([svgString], { type: "image/svg+xml" });
-  const url = URL.createObjectURL(blob);
+  // Clone the SVG element to embed external images as inline SVG
+  const clonedSvg = svgEl.cloneNode(true);
+  const images = clonedSvg.getElementsByTagName("image");
 
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "astro_avatar.svg";
-  link.click();
-  URL.revokeObjectURL(url);
+  const fetchImagePromises = [];
+  for (let img of images) {
+    const href = img.getAttribute("href");
+    if (href) {
+      fetchImagePromises.push(
+        fetch(href)
+          .then((res) => res.text())
+          .then((svgContent) => {
+            const parser = new DOMParser();
+            const inlineSvg = parser.parseFromString(
+              svgContent,
+              "image/svg+xml"
+            ).documentElement;
+            inlineSvg.setAttribute("x", img.getAttribute("x"));
+            inlineSvg.setAttribute("y", img.getAttribute("y"));
+            inlineSvg.setAttribute("width", img.getAttribute("width"));
+            inlineSvg.setAttribute("height", img.getAttribute("height"));
+            img.replaceWith(inlineSvg);
+          })
+      );
+    }
+  }
+
+  Promise.all(fetchImagePromises).then(() => {
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(clonedSvg);
+
+    const blob = new Blob([svgString], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "astro_avatar.svg";
+    link.click();
+    URL.revokeObjectURL(url);
+  });
 }
 
 /*******************************************************
- * Download avatar as PNG
+ * PNG Export is commented out for now
  *******************************************************/
-function downloadPng() {
-  const svgEl = document.getElementById("finalAvatar");
+// function downloadPng() {
+//   const svgEl = document.getElementById("finalAvatar");
 
-  const canvas = document.createElement("canvas");
-  canvas.width = 200;
-  canvas.height = 200;
-  const ctx = canvas.getContext("2d");
+//   const canvas = document.createElement("canvas");
+//   canvas.width = 200;
+//   canvas.height = 200;
+//   const ctx = canvas.getContext("2d");
 
-  const svgData = new XMLSerializer().serializeToString(svgEl);
-  const img = new Image();
-  const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-  const url = URL.createObjectURL(svgBlob);
+//   const serializer = new XMLSerializer();
+//   let svgString = serializer.serializeToString(svgEl);
 
-  img.onload = () => {
-    ctx.drawImage(img, 0, 0);
-    URL.revokeObjectURL(url);
+//   const images = svgEl.getElementsByTagName("image");
+//   const fetchImagePromises = [];
 
-    const pngUrl = canvas.toDataURL("image/png");
-    const link = document.createElement("a");
-    link.href = pngUrl;
-    link.download = "astro_avatar.png";
-    link.click();
-  };
+//   for (let img of images) {
+//     const href = img.getAttribute("href");
+//     if (href) {
+//       fetchImagePromises.push(
+//         fetch(href)
+//           .then((res) => res.text())
+//           .then((svgContent) => {
+//             const parser = new DOMParser();
+//             const inlineSvg = parser.parseFromString(svgContent, "image/svg+xml").documentElement;
+//             inlineSvg.setAttribute("x", img.getAttribute("x"));
+//             inlineSvg.setAttribute("y", img.getAttribute("y"));
+//             inlineSvg.setAttribute("width", img.getAttribute("width"));
+//             inlineSvg.setAttribute("height", img.getAttribute("height"));
+//             img.replaceWith(inlineSvg);
+//           })
+//       );
+//     }
+//   }
 
-  img.src = url;
-}
+//   Promise.all(fetchImagePromises).then(() => {
+//     svgString = serializer.serializeToString(svgEl);
+//     const img = new Image();
+//     const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+//     const url = URL.createObjectURL(svgBlob);
+
+//     img.onload = () => {
+//       ctx.drawImage(img, 0, 0);
+//       URL.revokeObjectURL(url);
+
+//       const pngUrl = canvas.toDataURL("image/png");
+//       const link = document.createElement("a");
+//       link.href = pngUrl;
+//       link.download = "astro_avatar.png";
+//       link.click();
+//     };
+
+//     img.src = url;
+//   });
+// }
