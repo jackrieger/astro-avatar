@@ -12,7 +12,6 @@
         <div class="interface__description">
           Enter your birth date to generate your astro avatar.
         </div>
-
         <div class="interface__date-select">
           <select id="daySelect" onchange="refreshAvatar()">
             <option value="">DAY</option>
@@ -25,16 +24,16 @@
           </select>
         </div>
       </div>
-
       <div class="interface__middle">
+        <!-- The finalAvatar SVG container is set to stretch 90vw × 90vh with no aspect ratio preservation -->
         <svg
           id="finalAvatar"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 200 200"
-          preserveAspectRatio="xMidYMid meet"
+          preserveAspectRatio="none"
+          style="width: 90vw; height: 90vh"
         ></svg>
       </div>
-
       <div class="interface__bottom">
         <div class="interface__download">
           <button
@@ -44,21 +43,12 @@
           >
             DOWNLOAD SVG
           </button>
-          <!-- <button
-            id="downloadPngButton"
-            style="display: none"
-            onclick="downloadPng()"
-          >
-            DOWNLOAD PNG
-          </button> -->
         </div>
-
         <div class="interface__reset">
           <button onclick="resetAvatar()">RESET</button>
         </div>
       </div>
     </div>
-
     <script src="main.js"></script>
   </body>
 </html>
