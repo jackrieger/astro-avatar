@@ -59,12 +59,14 @@ body {
 /* Styles for the final SVG container */
 #finalAvatar {
   background-color: #fff;
-  border: 1px solid #000;
   border-radius: 50%;
+  border: 1px solid #000;
   display: block;
-  margin: 20px auto; /* centers the SVG */
-  width: 300px; /* responsive width */
-  height: auto;
+  height: 90vh;
+  margin: 20px auto;
+  max-height: 90vh;
+  max-width: 90vw;
+  width: 90vw;
 }
 
 /*********************************************************

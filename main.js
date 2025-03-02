@@ -74,8 +74,12 @@ function createAvatarSvg(day, month, decade) {
     mouth = `<image href="${decadeToMouthPath[decade]}" x="62" y="144" width="75.5" height="38"/>`;
   }
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-      ${leftEye} ${rightEye} ${nose} ${mouth}
+  return `
+    <svg id="avatarSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" preserveAspectRatio="none">
+      <g id="faceGroup">
+        <rect id="faceBackground" x="0" y="0" width="200" height="200" fill="white"/>
+        ${leftEye} ${rightEye} ${nose} ${mouth}
+      </g>
     </svg>`;
 }
 
@@ -87,16 +91,40 @@ function refreshAvatar() {
   const month = parseInt(document.getElementById("monthSelect").value, 10);
   const decade = parseInt(document.getElementById("decadeSelect").value, 10);
 
-  const combined = createAvatarSvg(day, month, decade);
-  document.getElementById("finalAvatar").innerHTML = combined;
+  document.getElementById("finalAvatar").innerHTML = createAvatarSvg(
+    day,
+    month,
+    decade
+  );
+
+  const avatarSvg = document.querySelector("#finalAvatar #avatarSvg");
+  const faceGroup = avatarSvg.querySelector("#faceGroup");
+  const faceBackground = avatarSvg.querySelector("#faceBackground");
+
+  if (avatarSvg && faceGroup && faceBackground) {
+    // Compute the new width/height of the background (90% of viewport)
+    const newWidth = window.innerWidth * 0.9;
+    const newHeight = window.innerHeight * 0.9;
+
+    // Update the viewBox to sync with the new background size
+    avatarSvg.setAttribute("viewBox", `0 0 ${newWidth} ${newHeight}`);
+
+    // Update the face background to match new dimensions
+    faceBackground.setAttribute("width", newWidth);
+    faceBackground.setAttribute("height", newHeight);
+
+    // Compute scaling factors to match this new bounding box
+    const scaleX = newWidth / 200; // 200 is original reference width
+    const scaleY = newHeight / 200; // 200 is original reference height
+
+    // Apply scaling transformation to sync elements with background
+    faceGroup.setAttribute("transform", `scale(${scaleX}, ${scaleY})`);
+  }
 
   const showDownload = day && month && decade;
   document.getElementById("downloadSvgButton").style.display = showDownload
     ? "inline-block"
     : "none";
-
-  // PNG button hidden since PNG is disabled for now
-  // document.getElementById("downloadPngButton").style.display = showDownload ? "inline-block" : "none";
 }
 
 /*******************************************************
@@ -116,48 +144,39 @@ function resetAvatar() {
  * Download avatar as SVG (Fix for external images)
  *******************************************************/
 function downloadSvg() {
-  const svgEl = document.getElementById("finalAvatar");
+  const svgEl = document
+    .getElementById("finalAvatar")
+    .querySelector("#avatarSvg")
+    .cloneNode(true);
+  const faceGroup = svgEl.querySelector("#faceGroup");
+  const faceBackground = svgEl.querySelector("#faceBackground");
 
-  // Clone the SVG element to embed external images as inline SVG
-  const clonedSvg = svgEl.cloneNode(true);
-  const images = clonedSvg.getElementsByTagName("image");
+  if (faceGroup && faceBackground) {
+    // Get the actual width/height used for stretching
+    const newWidth = window.innerWidth * 0.9;
+    const newHeight = window.innerHeight * 0.9;
 
-  const fetchImagePromises = [];
-  for (let img of images) {
-    const href = img.getAttribute("href");
-    if (href) {
-      fetchImagePromises.push(
-        fetch(href)
-          .then((res) => res.text())
-          .then((svgContent) => {
-            const parser = new DOMParser();
-            const inlineSvg = parser.parseFromString(
-              svgContent,
-              "image/svg+xml"
-            ).documentElement;
-            inlineSvg.setAttribute("x", img.getAttribute("x"));
-            inlineSvg.setAttribute("y", img.getAttribute("y"));
-            inlineSvg.setAttribute("width", img.getAttribute("width"));
-            inlineSvg.setAttribute("height", img.getAttribute("height"));
-            img.replaceWith(inlineSvg);
-          })
-      );
-    }
+    // Apply the same transformation inside the exported SVG
+    svgEl.setAttribute("viewBox", `0 0 ${newWidth} ${newHeight}`);
+    faceBackground.setAttribute("width", newWidth);
+    faceBackground.setAttribute("height", newHeight);
+
+    const scaleX = newWidth / 200;
+    const scaleY = newHeight / 200;
+    faceGroup.setAttribute("transform", `scale(${scaleX}, ${scaleY})`);
   }
 
-  Promise.all(fetchImagePromises).then(() => {
-    const serializer = new XMLSerializer();
-    const svgString = serializer.serializeToString(clonedSvg);
+  const serializer = new XMLSerializer();
+  const svgString = serializer.serializeToString(svgEl);
 
-    const blob = new Blob([svgString], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
+  const blob = new Blob([svgString], { type: "image/svg+xml" });
+  const url = URL.createObjectURL(blob);
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "astro_avatar.svg";
-    link.click();
-    URL.revokeObjectURL(url);
-  });
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "astro_avatar.svg";
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 /*******************************************************
